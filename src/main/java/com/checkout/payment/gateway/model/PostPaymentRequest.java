@@ -1,26 +1,65 @@
 package com.checkout.payment.gateway.model;
 
+import com.checkout.payment.gateway.validation.FutureExpiryDate;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
 import java.io.Serializable;
 
+@FutureExpiryDate
 public class PostPaymentRequest implements Serializable {
 
-  @JsonProperty("card_number_last_four")
-  private int cardNumberLastFour;
-  @JsonProperty("expiry_month")
-  private int expiryMonth;
-  @JsonProperty("expiry_year")
-  private int expiryYear;
-  private String currency;
-  private int amount;
-  private int cvv;
+  @NotNull(message = "Card number is required")
+  @Pattern(regexp = "^[0-9]{14,19}$", message = "Card number must be between 14-19 digits")
+  @JsonProperty("card_number")
+  private String cardNumber;
 
-  public int getCardNumberLastFour() {
-    return cardNumberLastFour;
+  @NotNull(message = "Expiry month is required")
+  @Min(value = 1, message = "Expiry month must be between 1 and 12")
+  @Max(value = 12, message = "Expiry month must be between 1 and 12")
+  @JsonProperty("expiry_month")
+  private Integer expiryMonth;
+
+  @NotNull(message = "Expiry year is required")
+  @Min(value = 2026, message = "Expiry year must be 2026 or later")
+  @JsonProperty("expiry_year")
+  private Integer expiryYear;
+
+  @NotNull(message = "Currency is required")
+  @Pattern(
+      regexp = "^(GBP|USD|CNY)$", 
+      message = "Currency must be one of: GBP, USD, CNY"
+  )
+  private String currency;
+
+  @NotNull(message = "Amount is required")
+  @Positive(message = "Amount must be greater than 0")
+  private Integer amount;
+
+  @NotNull(message = "CVV is required")
+  @Min(value = 100, message = "CVV must be between 3-4 digits")
+  @Max(value = 9999, message = "CVV must be between 3-4 digits")
+  private Integer cvv;
+
+  public String getCardNumber() {
+    return cardNumber;
   }
 
-  public void setCardNumberLastFour(int cardNumberLastFour) {
-    this.cardNumberLastFour = cardNumberLastFour;
+  public void setCardNumber(String cardNumber) {
+    this.cardNumber = cardNumber;
+  }
+
+  @JsonIgnore
+  public String getCardNumberLastFour() {
+    if (cardNumber != null && cardNumber.length() >= 4) {
+      return cardNumber.substring(cardNumber.length() - 4);
+    }
+    
+    return "";
   }
 
   public int getExpiryMonth() {
@@ -63,7 +102,7 @@ public class PostPaymentRequest implements Serializable {
     this.cvv = cvv;
   }
 
-  @JsonProperty("expiry_date")
+  @JsonIgnore
   public String getExpiryDate() {
     return String.format("%d/%d", expiryMonth, expiryYear);
   }
@@ -71,7 +110,7 @@ public class PostPaymentRequest implements Serializable {
   @Override
   public String toString() {
     return "PostPaymentRequest{" +
-        "cardNumberLastFour=" + cardNumberLastFour +
+        "cardNumber='" + (cardNumber != null ? "****" + getCardNumberLastFour() : "null") + '\'' +
         ", expiryMonth=" + expiryMonth +
         ", expiryYear=" + expiryYear +
         ", currency='" + currency + '\'' +
