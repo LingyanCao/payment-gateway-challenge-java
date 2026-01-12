@@ -155,7 +155,6 @@ class PaymentGatewayControllerValidationTest {
 
   @Test
   void whenExpiryDateIsInThePastThenValidationFails() throws Exception {
-    // Using December 2025 which is before January 2026 (current date)
     String requestBody = """
         {
           "card_number": "1234567890123456",
@@ -172,7 +171,7 @@ class PaymentGatewayControllerValidationTest {
             .content(requestBody))
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.error").value("Validation failed"))
-        .andExpect(jsonPath("$.errors.expiryYear").value("Expiry year must be 2026 or later"));
+        .andExpect(jsonPath("$.errors.expiryDate").value("Card expiry date must be in the future"));
   }
 
   // 4. Currency Validation Tests

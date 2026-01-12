@@ -1,4 +1,4 @@
-package com.checkout.payment.gateway.validation;
+package com.checkout.payment.gateway.model.validation;
 
 import com.checkout.payment.gateway.model.PostPaymentRequest;
 import jakarta.validation.ConstraintValidator;
@@ -20,27 +20,17 @@ public class FutureExpiryDateValidator implements ConstraintValidator<FutureExpi
     Integer expiryMonth = request.getExpiryMonth();
     Integer expiryYear = request.getExpiryYear();
 
-    // If either field is null, let @NotNull handle it
-    if (expiryMonth == null || expiryYear == null) {
+    // avoid duplicate field validation
+    if (expiryMonth == null || expiryYear == null || expiryMonth < 1 || expiryMonth > 12 || expiryYear < 2025) {
       return true;
     }
 
-    // Validate month range (1-12) before creating YearMonth
-    if (expiryMonth < 1 || expiryMonth > 12) {
-      return true; // Let @Min/@Max handle month validation
-    }
-
-    // Validate year range
-    if (expiryYear < 2026) {
-      return true;
-    }
 
     try {
       YearMonth cardExpiry = YearMonth.of(expiryYear, expiryMonth);
       YearMonth currentMonth = YearMonth.now();
       return !cardExpiry.isBefore(currentMonth);
     } catch (Exception e) {
-      // If YearMonth creation fails for any reason, validation fails
       return false;
     }
   }

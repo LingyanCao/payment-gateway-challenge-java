@@ -1,6 +1,6 @@
 package com.checkout.payment.gateway.model;
 
-import com.checkout.payment.gateway.validation.FutureExpiryDate;
+import com.checkout.payment.gateway.model.validation.FutureExpiryDate;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Max;
@@ -25,7 +25,7 @@ public class PostPaymentRequest implements Serializable {
   private Integer expiryMonth;
 
   @NotNull(message = "Expiry year is required")
-  @Min(value = 2026, message = "Expiry year must be 2026 or later")
+  @Min(value = 2025, message = "Expiry year must be 2025 or later")
   @JsonProperty("expiry_year")
   private Integer expiryYear;
 

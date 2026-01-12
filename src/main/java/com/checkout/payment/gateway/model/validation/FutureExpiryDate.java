@@ -1,4 +1,4 @@
-package com.checkout.payment.gateway.validation;
+package com.checkout.payment.gateway.model.validation;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
