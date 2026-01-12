@@ -29,7 +29,7 @@ public class PaymentGatewayController {
     return new ResponseEntity<>(response, HttpStatus.OK);
   }
 
-  @GetMapping("/payment/{id}")
+  @GetMapping("/payments/{id}")
   public ResponseEntity<PostPaymentResponse> getPostPaymentEventById(@PathVariable UUID id) {
     return new ResponseEntity<>(paymentGatewayService.getPaymentById(id), HttpStatus.OK);
   }

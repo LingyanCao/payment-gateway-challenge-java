@@ -38,7 +38,7 @@ class PaymentGatewayControllerTest {
 
     paymentsRepository.add(payment);
 
-    mvc.perform(MockMvcRequestBuilders.get("/payment/" + payment.getId()))
+    mvc.perform(MockMvcRequestBuilders.get("/payments/" + payment.getId()))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.status").value(payment.getStatus().getName()))
         .andExpect(jsonPath("$.cardNumberLastFour").value(payment.getCardNumberLastFour()))
@@ -48,10 +48,10 @@ class PaymentGatewayControllerTest {
         .andExpect(jsonPath("$.amount").value(payment.getAmount()));
   }
 
-  // 2. Test for GET /payment/{id} endpoint - payment not found
+  // 2. Test for GET /payments/{id} endpoint - payment not found
   @Test
   void whenPaymentWithIdDoesNotExistThen404IsReturned() throws Exception {
-    mvc.perform(MockMvcRequestBuilders.get("/payment/" + UUID.randomUUID()))
+    mvc.perform(MockMvcRequestBuilders.get("/payments/" + UUID.randomUUID()))
         .andExpect(status().isNotFound())
         .andExpect(jsonPath("$.message").value("Payment not found. Please check the payment ID and try again."));
   }
