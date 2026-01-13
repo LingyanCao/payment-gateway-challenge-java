@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 
 @Service
@@ -61,24 +62,34 @@ public class PaymentGatewayService {
         LOG.info("Payment {} declined", paymentId);
       }
       
+    } catch (HttpClientErrorException ex) {
+      // Bank service returned 4xx error.
+      // This should not happen since we have done the validation in payment gateway already.
+      // But in case there is validation update in Bank Service, we handle it gracefully.
+      LOG.error("Bank client error for payment {}: HTTP {} - {}. Invalid request format.", 
+          paymentId, ex.getStatusCode(), ex.getResponseBodyAsString(), ex);
+      throw new EventProcessingException(
+          "Payment request validation failed. Please contact support.",
+          HttpStatus.BAD_REQUEST
+      );
+      
     } catch (HttpServerErrorException ex) {
-      // Bank service returned 5xx error - this is a technical failure, not a business decline.
+      // Bank service returned 5xx error.
       // Do not save payment record as we don't know the actual status.
-      // Client should retry the request.
       LOG.error("Bank service unavailable for payment {}: HTTP {} - {}. Transaction not completed.", 
           paymentId, ex.getStatusCode(), ex.getStatusText(), ex);
       throw new EventProcessingException(
-          "Payment service temporarily unavailable. Please try again later.",
+          "Bank service temporarily unavailable. Please try again later or contact support team.",
           HttpStatus.SERVICE_UNAVAILABLE
       );
-    } catch (Exception ex) {
-      // Unexpected errors (network issues, timeouts, etc.) - also technical failures
+    }  catch (Exception ex) {
+      // Catch-all for unexpected errors
       // Do not save payment record as we don't know the actual status.
       LOG.error("Unexpected error processing payment {}: {}. Transaction not completed.", 
           paymentId, ex.getMessage(), ex);
       throw new EventProcessingException(
-          "Unable to process payment at this time. Please try again.",
-          HttpStatus.SERVICE_UNAVAILABLE
+          "Internal server error. Please try again or contact support team.",
+          HttpStatus.INTERNAL_SERVER_ERROR
       );
     }
     

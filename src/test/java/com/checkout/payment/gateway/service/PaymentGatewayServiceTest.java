@@ -21,6 +21,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
 
@@ -144,7 +146,31 @@ class PaymentGatewayServiceTest {
         () -> paymentGatewayService.processPayment(validRequest)
     );
 
-    assertEquals("Payment service temporarily unavailable. Please try again later.", exception.getMessage());
+    assertEquals("Bank service temporarily unavailable. Please try again later or contact support team.", exception.getMessage());
+    assertEquals(org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE, exception.getHttpStatus());
+    verify(bankClient, times(1)).processPayment(any(BankRequest.class));
+    verify(paymentsRepository, never()).add(any());
+  }
+
+  @Test
+  void whenBankReturns4xxErrorThenThrowBadRequestException() {
+    // Simulate bank returning 400 Bad Request
+    HttpClientErrorException clientError = HttpClientErrorException.create(
+        HttpStatus.BAD_REQUEST,
+        "Bad Request",
+        null,
+        "Invalid request format".getBytes(),
+        null
+    );
+    when(bankClient.processPayment(any(BankRequest.class))).thenThrow(clientError);
+
+    EventProcessingException exception = assertThrows(
+        EventProcessingException.class,
+        () -> paymentGatewayService.processPayment(validRequest)
+    );
+
+    assertEquals("Payment request validation failed. Please contact support.", exception.getMessage());
+    assertEquals(org.springframework.http.HttpStatus.BAD_REQUEST, exception.getHttpStatus());
     verify(bankClient, times(1)).processPayment(any(BankRequest.class));
     verify(paymentsRepository, never()).add(any());
   }
@@ -159,7 +185,8 @@ class PaymentGatewayServiceTest {
         () -> paymentGatewayService.processPayment(validRequest)
     );
 
-    assertEquals("Unable to process payment at this time. Please try again.", exception.getMessage());
+    assertEquals("Internal server error. Please try again or contact support team.", exception.getMessage());
+    assertEquals(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR, exception.getHttpStatus());
     verify(bankClient, times(1)).processPayment(any(BankRequest.class));
     verify(paymentsRepository, never()).add(any());
   }
@@ -176,7 +203,8 @@ class PaymentGatewayServiceTest {
         () -> paymentGatewayService.processPayment(validRequest)
     );
 
-    assertEquals("Unable to process payment at this time. Please try again.", exception.getMessage());
+    assertEquals("Internal server error. Please try again or contact support team.", exception.getMessage());
+    assertEquals(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR, exception.getHttpStatus());
     verify(bankClient, times(1)).processPayment(any(BankRequest.class));
     verify(paymentsRepository, never()).add(any());
   }

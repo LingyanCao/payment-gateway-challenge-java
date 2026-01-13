@@ -131,7 +131,7 @@ class PaymentGatewayControllerTest {
             .contentType("application/json")
             .content(serverErrorRequest))
         .andExpect(status().isServiceUnavailable())
-        .andExpect(jsonPath("$.message").value("Payment service temporarily unavailable. Please try again later."));
+        .andExpect(jsonPath("$.message").value("Bank service temporarily unavailable. Please try again later or contact support team."));
   }
 
   
