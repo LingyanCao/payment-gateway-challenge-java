@@ -4,6 +4,25 @@
 
 This document describes the design and implementation of a Payment Gateway service. The gateway acts as an intermediary between merchants and banks, providing a secure and reliable payment processing API.
 
+## Key Design Considerations and Assumptions
+
+### 1. Retry and Idempotency
+
+**Current Implementation**: The system does not implement retry logic or idempotency for the moment.
+
+**Assumptions**:
+- For this implementation, payments are processed once without automatic retries
+- Each request is treated as a new, independent payment attempt
+
+**Future Considerations**:
+- **Retry Logic**: Could implement exponential backoff for transient failures (network timeouts, 503 responses) at BankCient layer
+- **Idempotency Keys**: Should be added for production to prevent duplicate charges if clients/payment gateway retry failed requests
+- **Circuit Breaker**: Consider implementing a circuit breaker pattern to protect against cascading failures
+
+### 2. Exception Handling Strategy
+
+The BankClient does not capture exceptions from the underlying RestTemplate. Instead, all exception handling is centralized in the service layer (PaymentGatewayService). Because business layer could determine how to handle the exceptions and return the correct message to client.
+
 ## Architecture
 
 ### High-Level Architecture
